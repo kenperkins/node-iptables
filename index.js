@@ -43,7 +43,7 @@ exports.list = function(chain, cb) {
         .skip(2)
         .map(function (line) {
             // packets, bytes, target, pro, opt, in, out, src, dst, opts
-            var fields = line.trim().split(/\s+/, 9);
+            var fields = line.trim().split(/\s+/, 11);
             return {
                 parsed : {
                     packets : fields[0],
@@ -54,7 +54,8 @@ exports.list = function(chain, cb) {
                     in : fields[5],
                     out : fields[6],
                     src : fields[7],
-                    dst : fields[8]
+                    dst : fields[8],
+                    mac : fields[10]
                 },
                 raw : line.trim()
             };
@@ -66,6 +67,7 @@ exports.list = function(chain, cb) {
 
 exports.newRule = newRule;
 exports.deleteRule = deleteRule;
+exports.insertRule = insertRule;
 
 function iptables (rule) {
     var args = iptablesArgs(rule);
@@ -93,6 +95,7 @@ function iptablesArgs (rule) {
         return args;
     }
 
+    if (rule.mac) args = args.concat(["-m", "mac","--mac-source", rule.mac]);
     if (rule.chain) args = args.concat([rule.action, rule.chain]);
     if (rule.protocol) args = args.concat(["-p", rule.protocol]);
     if (rule.src) args = args.concat(["--src", rule.src]);
@@ -118,3 +121,7 @@ function deleteRule (rule) {
     iptables(rule);
 }
 
+function insertRule (rule) {
+    rule.action = '-I';
+    iptables(rule);
+}
